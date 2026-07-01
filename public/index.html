@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Automation Tool - Sahil Ansari</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #25D366;
+            --primary-dark: #1da851;
+            --secondary: #075E54;
+            --accent: #34B7F1;
+            --dark: #0f1419;
+            --light: #f5f5f5;
+            --border: rgba(255, 255, 255, 0.2);
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --neon-cyan: #00d4ff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #050816;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Neon Plexus Background */
+        #plexus-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0a0e27 0%, #050816 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: white;
+            margin-bottom: 5px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tagline {
+            font-size: 0.9em;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 5px;
+            text-shadow: 0 0 10px rgba(37, 211, 102, 0.5);
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 40px 0 50px 0;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: 700;
+            position: relative;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .step-circle.active {
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 20px var(--neon-cyan), 
+                        inset 0 0 20px rgba(0, 212, 255, 0.2);
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--neon-cyan);
+        }
+
+        .step-circle.inactive {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .step-circle.completed {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary), 
+                        inset 0 0 20px rgba(37, 211, 102, 0.2);
+            background: rgba(37, 211, 102, 0.1);
+            color: var(--primary);
+        }
+
+        .step-label {
+            font-size: 0.9em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-label {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px var(--neon-cyan);
+        }
+
+        .step.completed .step-label {
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary);
+        }
+
+        .step.inactive .step-label {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .step-connector {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .step-connector.active {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Glassmorphism Card */
+        .card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            color: white;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        /* Glassmorphism Inputs */
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(37, 211, 102, 0.2);
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert.show { display: block; }
+        .alert-success { background: rgba(16, 185, 129, 0.2); border: 1px solid var(--success); color: #d1fae5; }
+        .alert-error { background: rgba(239, 68, 68, 0.2); border: 1px solid var(--error); color: #fee2e2; }
+        .alert-info { background: rgba(52, 183, 241, 0.2); border: 1px solid var(--accent); color: #e0f2fe; }
+
+        .loading { display: none; text-align: center; margin: 20px 0; }
+        .loading.active { display: block; }
+        .spinner { border: 3px solid rgba(37, 211, 102, 0.2); border-top: 3px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .pairing-code {
+            font-size: 2em;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--primary);
+            border-radius: 15px;
+            color: var(--primary);
+            font-family: monospace;
+            text-shadow: 0 0 10px rgba(37, 211, 102, 0.3);
+        }
+
+        .key-display {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            word-break: break-all;
+            font-family: monospace;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .hidden-section { display: none; }
+        .active-section { display: grid; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .footer { text-align: center; margin-top: 50px; padding: 30px 20px; color: rgba(255, 255, 255, 0.4); font-size: 0.85em; }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } .step-indicator { gap: 10px; } .step-circle { width: 65px; height: 65px; font-size: 1.4em; } .step-connector { display: none; } }
+    </style>
+</head>
+<body>
+    <canvas id="plexus-canvas"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">💬</div>
+                <div><h1>WhatsApp Automation</h1></div>
+            </div>
+            <p class="subtitle">Smart Messaging Tool</p>
+            <p class="tagline">By Sahil Ansari</p>
+        </header>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step-1" onclick="goToStep(1)">
+                <div class="step-circle active">01</div>
+                <div class="step-label">Connect</div>
+            </div>
+            <div class="step-connector" id="connector-1"></div>
+            <div class="step inactive" id="step-2" onclick="goToStep(2)">
+                <div class="step-circle inactive">02</div>
+                <div class="step-label">Setup</div>
+            </div>
+            <div class="step-connector" id="connector-2"></div>
+            <div class="step inactive" id="step-3" onclick="goToStep(3)">
+                <div class="step-circle inactive">03</div>
+                <div class="step-label">Stop</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Connect -->
+        <div id="section-1" class="main-content active-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📱</div>
+                    <div class="card-title">Connect WhatsApp</div>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="phoneNumber" placeholder="e.g., 919876543210" required>
+                    </div>
+                    <button type="submit" class="btn-primary" id="loginBtn">🔗 Generate Pairing Code</button>
+                </form>
+                <div class="loading" id="loginLoading"><div class="spinner"></div><p>Connecting...</p></div>
+                <div id="loginResult" class="alert"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔐</div>
+                    <div class="card-title">Unique Key</div>
+                </div>
+                <p style="color: rgba(255, 255, 255, 0.6); line-height: 1.6; margin-bottom: 15px;">Save your unique key to manage your session later.</p>
+                <div id="keyDisplayArea" style="display: none;">
+                    <div class="key-display" id="generatedKey"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Setup -->
+        <div id="section-2" class="main-content hidden-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📨</div>
+                    <div class="card-title">Automation Setup</div>
+                </div>
+                <form id="messagingForm">
+                    <div class="form-group">
+                        <label>Target Group/Number</label>
+                        <input type="text" id="target" placeholder="e.g., 120363XXXXXX@g.us" required>
+                        <button type="button" class="btn-secondary" onclick="fetchGroups()">📋 Fetch My Groups</button>
+                    </div>
+                    <div id="groupsList" style="display: none; margin-bottom: 20px;">
+                        <label>Select Group</label>
+                        <select id="groupSelect" onchange="selectGroup()"><option value="">-- Select a group --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Greeting/Prefix</label>
+                        <input type="text" id="hatersName" placeholder="e.g., Hello" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Messages (.txt)</label>
+                        <input type="file" id="messageFile" accept=".txt" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Interval (seconds)</label>
+                        <input type="number" id="speed" min="1" value="5" required>
+                    </div>
+                    <button type="submit" class="btn-primary" id="startBtn">🚀 Start Automation</button>
+                </form>
+                <div class="loading" id="messagingLoading"><div class="spinner"></div><p>Starting...</p></div>
+                <div id="messagingResult" class="alert"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">⚙️</div>
+                    <div class="card-title">Instructions</div>
+                </div>
+                <ul style="color: rgba(255, 255, 255, 0.6); line-height: 2; padding-left: 20px;">
+                    <li>Select target group or enter ID</li>
+                    <li>Upload your message file</li>
+                    <li>Set delay between messages</li>
+                    <li>Click start to begin</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Step 3: Stop -->
+        <div id="section-3" class="main-content hidden-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🛑</div>
+                    <div class="card-title">Stop Automation</div>
+                </div>
+                <form id="stopForm">
+                    <div class="form-group">
+                        <label>Unique Key</label>
+                        <input type="text" id="stopKey" placeholder="Paste your unique key here" required>
+                    </div>
+                    <button type="submit" class="btn-danger" id="stopBtn">⏹️ Stop Process</button>
+                </form>
+                <div class="loading" id="stopLoading"><div class="spinner"></div><p>Stopping...</p></div>
+                <div id="stopResult" class="alert"></div>
+            </div>
+        </div>
+
+        <div class="footer"><p>WhatsApp Automation Tool v2.0 | Created by Sahil Ansari</p></div>
+    </div>
+
+    <script>
+        // Plexus Animation
+        const canvas = document.getElementById('plexus-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleCount = 80;
+        const maxDistance = 150;
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2 + 1
+                });
+            }
+        }
+
+        function drawPlexus() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 212, 255, 0.5)';
+                ctx.fill();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let dx = p.x - p2.x;
+                    let dy = p.y - p2.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < maxDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        let alpha = 1 - dist / maxDistance;
+                        ctx.strokeStyle = `rgba(0, 212, 255, ${alpha * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(drawPlexus);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawPlexus();
+
+        // App Logic
+        let currentUniqueKey = '';
+        const API_URL = window.location.origin;
+
+        function goToStep(step) {
+            document.querySelectorAll('.main-content').forEach(el => {
+                el.classList.remove('active-section');
+                el.classList.add('hidden-section');
+            });
+            document.getElementById(`section-${step}`).classList.remove('hidden-section');
+            document.getElementById(`section-${step}`).classList.add('active-section');
+
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                const circle = stepEl.querySelector('.step-circle');
+                stepEl.classList.remove('active', 'completed', 'inactive');
+                circle.classList.remove('active', 'completed', 'inactive');
+                
+                if (i < step) {
+                    stepEl.classList.add('completed');
+                    circle.classList.add('completed');
+                } else if (i === step) {
+                    stepEl.classList.add('active');
+                    circle.classList.add('active');
+                } else {
+                    stepEl.classList.add('inactive');
+                    circle.classList.add('inactive');
+                }
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+            const loginLoading = document.getElementById('loginLoading');
+            const loginResult = document.getElementById('loginResult');
+
+            loginBtn.disabled = true;
+            loginLoading.classList.add('active');
+            loginResult.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber })
+                });
+                const data = await response.json();
+                loginLoading.classList.remove('active');
+
+                if (data.success) {
+                    currentUniqueKey = data.uniqueKey;
+                    document.getElementById('keyDisplayArea').style.display = 'block';
+                    document.getElementById('generatedKey').textContent = currentUniqueKey;
+                    
+                    if (data.connected) {
+                        loginResult.className = 'alert alert-success show';
+                        loginResult.innerHTML = `<strong>✅ Connected!</strong> Key: ${currentUniqueKey}`;
+                        setTimeout(() => goToStep(2), 2000);
+                    } else if (data.pairingCode) {
+                        loginResult.className = 'alert alert-info show';
+                        loginResult.innerHTML = `<strong>🔐 Pairing Code:</strong><div class="pairing-code">${data.pairingCode}</div><p>Enter this in WhatsApp. Moving to Setup...</p>`;
+                        setTimeout(() => goToStep(2), 4000);
+                    }
+                } else {
+                    loginResult.className = 'alert alert-error show';
+                    loginResult.innerHTML = `<strong>❌ Error:</strong> ${data.message}`;
+                    loginBtn.disabled = false;
+                }
+            } catch (error) {
+                loginLoading.classList.remove('active');
+                loginResult.className = 'alert alert-error show';
+                loginResult.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                loginBtn.disabled = false;
+            }
+        });
+
+        async function fetchGroups() {
+            try {
+                const response = await fetch(`${API_URL}/getGroups`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uniqueKey: currentUniqueKey })
+                });
+                const data = await response.json();
+                if (data.success && data.groupUIDs) {
+                    const groupSelect = document.getElementById('groupSelect');
+                    groupSelect.innerHTML = '<option value="">-- Select a group --</option>';
+                    data.groupUIDs.forEach(group => {
+                        const option = document.createElement('option');
+                        option.value = group.groupId;
+                        option.textContent = group.groupName;
+                        groupSelect.appendChild(option);
+                    });
+                    document.getElementById('groupsList').style.display = 'block';
+                }
+            } catch (error) { alert('Error: ' + error.message); }
+        }
+
+        function selectGroup() {
+            const groupSelect = document.getElementById('groupSelect');
+            if (groupSelect.value) document.getElementById('target').value = groupSelect.value;
+        }
+
+        document.getElementById('messagingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('uniqueKey', currentUniqueKey);
+            formData.append('target', document.getElementById('target').value.trim());
+            formData.append('hatersName', document.getElementById('hatersName').value.trim());
+            formData.append('speed', document.getElementById('speed').value);
+            formData.append('messageFile', document.getElementById('messageFile').files[0]);
+
+            const startBtn = document.getElementById('startBtn');
+            const messagingLoading = document.getElementById('messagingLoading');
+            const messagingResult = document.getElementById('messagingResult');
+
+            startBtn.disabled = true;
+            messagingLoading.classList.add('active');
+            messagingResult.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/startMessaging`, { method: 'POST', body: formData });
+                const data = await response.json();
+                messagingLoading.classList.remove('active');
+                if (data.success) {
+                    messagingResult.className = 'alert alert-success show';
+                    messagingResult.innerHTML = `<strong>✅ Started!</strong> Sending messages to ${data.target}`;
+                } else {
+                    messagingResult.className = 'alert alert-error show';
+                    messagingResult.innerHTML = `<strong>❌ Error:</strong> ${data.message}`;
+                    startBtn.disabled = false;
+                }
+            } catch (error) {
+                messagingLoading.classList.remove('active');
+                messagingResult.className = 'alert alert-error show';
+                messagingResult.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                startBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('stopForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const stopKey = document.getElementById('stopKey').value.trim();
+            const stopBtn = document.getElementById('stopBtn');
+            const stopLoading = document.getElementById('stopLoading');
+            const stopResult = document.getElementById('stopResult');
+
+            stopBtn.disabled = true;
+            stopLoading.classList.add('active');
+            stopResult.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uniqueKey: stopKey })
+                });
+                const data = await response.json();
+                stopLoading.classList.remove('active');
+                if (data.success) {
+                    stopResult.className = 'alert alert-success show';
+                    stopResult.innerHTML = `<strong>✅ Stopped!</strong> ${data.message}`;
+                } else {
+                    stopResult.className = 'alert alert-error show';
+                    stopResult.innerHTML = `<strong>❌ Error:</strong> ${data.message}`;
+                }
+                stopBtn.disabled = false;
+            } catch (error) {
+                stopLoading.classList.remove('active');
+                stopResult.className = 'alert alert-error show';
+                stopResult.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                stopBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
